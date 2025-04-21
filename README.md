@@ -33,7 +33,7 @@ This repository provides a local AI integration for Maltego using Ollama’s HTT
    ```
 
 2. **Configure**  
-   Edit `config.json` with your pllama model:
+   Edit `config.json` with your ollama model:
    ```json
    {
      "ollama_model": "dolphin-mixtral:8x7b",
