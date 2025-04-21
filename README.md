@@ -33,7 +33,7 @@ This repository provides a local AI integration for Maltego using Ollama’s HTT
    ```
 
 2. **Configure**  
-   Copy `config.json.template` to `config.json` and edit:
+   Edit `config.json` with your pllama model:
    ```json
    {
      "ollama_model": "dolphin-mixtral:8x7b",
@@ -49,7 +49,7 @@ This repository provides a local AI integration for Maltego using Ollama’s HTT
    pip install fastapi uvicorn requests
    ```
 
-## Running the API Server
+## Running the API Server 
 
 ```bash
 uvicorn ai_api:app
