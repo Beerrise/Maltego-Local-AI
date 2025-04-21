@@ -2,7 +2,7 @@
 
 All notable changes to **Maltego‑Local‑AI** will be documented in this file.
 
-## [Unreleased] – 2025‑04‑21
+## V1.1 – 2025‑04‑21
 
 ### Added
 - **keep_alive** setting in **config.json** to keep the Ollama model warmed between requests.  
