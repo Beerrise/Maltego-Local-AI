@@ -1,48 +1,64 @@
-import subprocess, uuid, json, os
-from fastapi import FastAPI, Query
-from typing import Dict
+# ai_api.py  – faster, lighter replacement (Python 3.9+)
+import os, json, uuid, threading
+from typing import Dict, List
+import requests
+from fastapi import FastAPI, HTTPException, Query
 
-# load config.json from the same folder as this script
-here = os.path.dirname(__file__)
-cfg_path = os.path.join(here, "config.json")
+# ── read config.json exactly like before ─────────────────────────────────────
+here      = os.path.dirname(__file__)
+cfg_path  = os.path.join(here, "config.json")
 if not os.path.exists(cfg_path):
-    raise RuntimeError(f"Missing config.json — please copy template and fill it out.")
+    raise RuntimeError("Missing config.json – copy the template and fill it out.")
 
-cfg = json.load(open(cfg_path, "r", encoding="utf-8"))
-ollama_path  = cfg["ollama_path"]
-ollama_model = cfg["ollama_model"]
-HOST = cfg.get("host", "127.0.0.1")
-PORT = cfg.get("port", 8000)
+cfg          = json.load(open(cfg_path, "r", encoding="utf-8"))
+OLLAMA_HOST  = cfg.get("ollama_host", "http://127.0.0.1:11434")  # NEW (optional)
+OLLAMA_MODEL = cfg["ollama_model"]
+HOST         = cfg.get("host", "127.0.0.1")
+PORT         = cfg.get("port", 8000)
+KEEPALIVE    = cfg.get("keep_alive", "1h")                       # keep model warm
 
-app = FastAPI()
-sessions: Dict[str, str] = {}
+app       = FastAPI()
+_sessions: Dict[str, List[dict]] = {}            # {sid: [ {"role":...}, ... ]}
+_lock     = threading.Lock()                     # protect _sessions in multithread
 
-def query_ollama(prompt: str) -> str:
-    proc = subprocess.run(
-        [ollama_path, "run", ollama_model],
-        input=prompt,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace"
-    )
-    if proc.returncode != 0:
-        return f"Error: {proc.stderr}"
-    return proc.stdout.strip()
+# ── helper ───────────────────────────────────────────────────────────────────
+def chat_with_ollama(history: List[dict]) -> str:
+    """Send the full history to Ollama’s /api/chat endpoint and return the reply."""
+    payload = {
+        "model":      OLLAMA_MODEL,
+        "messages":   history,
+        "stream":     False,          # oneshot response
+        "keep_alive": KEEPALIVE,
+    }
+    try:
+        r = requests.post(f"{OLLAMA_HOST}/api/chat", json=payload, timeout=300)
+        r.raise_for_status()
+        return r.json()["message"]["content"].strip()
+    except requests.RequestException as e:
+        raise HTTPException(500, f"Ollama error: {e}")
 
+# ── /ask endpoint ────────────────────────────────────────────────────────────
 @app.get("/ask")
-def ask(query: str, session_id: str = Query(None)):
-    import uuid as _uuid
-    if not session_id or session_id not in sessions:
-        session_id = str(_uuid.uuid4())
-        sessions[session_id] = ""
+def ask(query: str, session_id: str | None = Query(default=None)):
+    # 1. get or create session
+    if not session_id:
+        session_id = str(uuid.uuid4())
 
-    history = sessions[session_id]
-    prompt  = (history + "\n" if history else "") + f"User: {query}\nAI:"
-    answer  = query_ollama(prompt)
-    sessions[session_id] = f"{prompt}{answer}"
+    with _lock:
+        history = _sessions.setdefault(session_id, [])
+
+    # 2. append user turn → call Ollama
+    history.append({"role": "user", "content": query})
+    answer = chat_with_ollama(history)
+
+    # 3. append assistant turn
+    history.append({"role": "assistant", "content": answer})
+    with _lock:
+        _sessions[session_id] = history   # save updated history
+
     return {"response": answer, "session_id": session_id}
 
+# ── run exactly like before ──────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=HOST, port=PORT)
