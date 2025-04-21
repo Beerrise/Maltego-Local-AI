@@ -1,6 +1,7 @@
 {
-  "ollama_path": "C:\\Users\\YOURUSERNAMEHERE\\AppData\\Local\\Programs\\Ollama\\ollama.exe",
-  "ollama_model": "ollama model you're using here",
-  "host": "127.0.0.1",
-  "port": 8000
+  "ollama_model": "AI Model Name Here",
+  "ollama_host":  "http://127.0.0.1:11434",
+  "host":         "127.0.0.1",
+  "port":         8000,
+  "keep_alive":   "1h"
 }
