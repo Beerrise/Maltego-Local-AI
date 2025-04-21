@@ -52,7 +52,7 @@ This repository provides a local AI integration for Maltego using Ollama’s HTT
 ## Running the API Server
 
 ```bash
-uvicorn ai_api:app --reload
+uvicorn ai_api:app
 ```
 This reads your `config.json`, connects to Ollama’s HTTP API, and exposes `/ask`.
 
