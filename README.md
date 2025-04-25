@@ -49,6 +49,17 @@ This repository provides a local AI integration for Maltego using Ollama’s HTT
    pip install fastapi uvicorn requests
    ```
 
+### Offline Installation (Air-Gapped Environments)
+
+If you are in an air-gapped environment:
+
+1. Ensure you have the `packages/` folder included in this repository, containing the required pre-downloaded dependencies.
+2. Install them locally with:
+
+```bash
+pip install --no-index --find-links=packages fastapi uvicorn requests
+```
+
 ## Running the API Server 
 
 ```bash
