@@ -2,7 +2,17 @@
 
 All notable changes to **Maltego‑Local‑AI** will be documented in this file.
 
-## V1.1 – 2025‑04‑21
+---
+
+## v1.1.1 – 2025‑04‑25
+
+### Added
+- `packages/` folder for offline (air-gapped) installation support with pre-downloaded dependencies.
+- Offline installation instructions added to `README.md`.
+
+---
+
+## v1.1 – 2025‑04‑21
 
 ### Added
 - **keep_alive** setting in **config.json** to keep the Ollama model warmed between requests.  
@@ -26,4 +36,4 @@ All notable changes to **Maltego‑Local‑AI** will be documented in this file.
 ### Fixed
 - Cold‑start latency by introducing model warming via `keep_alive`.  
 - Inconsistent session persistence across transform runs.  
-- Potential threading issues when multiple `/ask` requests arrive simultaneously.  
+- Potential threading issues when multiple `/ask` requests arrive simultaneously.
